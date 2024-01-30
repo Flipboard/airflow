@@ -32,7 +32,7 @@ Authlib==1.2.1
 Babel==2.13.0
 ConfigUpdater==3.1.1
 Deprecated==1.2.14
-Flask-AppBuilder==4.3.6
+#Flask-AppBuilder==4.3.6
 Flask-Babel==2.0.0
 Flask-Bcrypt==1.0.1
 Flask-Caching==2.0.2
@@ -183,7 +183,7 @@ asttokens==2.4.0
 async-timeout==4.0.3
 atlasclient==1.0.0
 atlassian-python-api==3.41.2
-attrs==23.1.0
+#attrs==23.1.0
 aws-xray-sdk==2.12.0
 azure-batch==14.0.0
 azure-common==1.1.28
