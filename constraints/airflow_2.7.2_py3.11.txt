@@ -92,7 +92,7 @@ anyascii==0.3.2
 anyio==4.0.0
 apache-airflow-providers-airbyte==3.3.2
 apache-airflow-providers-alibaba==2.5.3
-apache-airflow-providers-amazon==8.5.1
+apache-airflow-providers-amazon==8.7.1
 apache-airflow-providers-apache-beam==5.2.3
 apache-airflow-providers-apache-cassandra==3.2.1
 apache-airflow-providers-apache-drill==2.4.4
