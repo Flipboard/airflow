@@ -543,7 +543,7 @@ pyzmq==25.1.1
 reactivex==4.0.4
 readme-renderer==42.0
 redis==4.6.0
-redshift-connector==2.0.914
+redshift-connector==2.0.915
 referencing==0.30.2
 regex==2023.10.3
 requests-file==1.5.1
