@@ -32,7 +32,7 @@ Authlib==1.2.1
 Babel==2.13.0
 ConfigUpdater==3.1.1
 Deprecated==1.2.14
-#Flask-AppBuilder==4.3.6
+Flask-AppBuilder==4.3.6
 Flask-Babel==2.0.0
 Flask-Bcrypt==1.0.1
 Flask-Caching==2.0.2
@@ -92,7 +92,7 @@ anyascii==0.3.2
 anyio==4.0.0
 apache-airflow-providers-airbyte==3.3.2
 apache-airflow-providers-alibaba==2.5.3
-apache-airflow-providers-amazon==8.7.1
+apache-airflow-providers-amazon==8.5.1
 apache-airflow-providers-apache-beam==5.2.3
 apache-airflow-providers-apache-cassandra==3.2.1
 apache-airflow-providers-apache-drill==2.4.4
@@ -183,7 +183,7 @@ asttokens==2.4.0
 async-timeout==4.0.3
 atlasclient==1.0.0
 atlassian-python-api==3.41.2
-#attrs==23.1.0
+attrs==23.1.0
 aws-xray-sdk==2.12.0
 azure-batch==14.0.0
 azure-common==1.1.28
@@ -219,8 +219,8 @@ billiard==4.1.0
 bitarray==2.8.2
 black==23.9.1
 blinker==1.6.3
-boto3==1.28.17
-botocore==1.31.17
+#boto3==1.28.17
+#botocore==1.31.17
 cachelib==0.9.0
 cachetools==5.3.1
 cassandra-driver==3.28.0
@@ -282,6 +282,7 @@ fastjsonschema==2.18.1
 filelock==3.12.4
 flower==2.0.1
 frozenlist==1.4.0
+fsspec==2023.9.2
 future==0.18.3
 gcloud-aio-auth==4.2.3
 gcloud-aio-bigquery==7.0.0
@@ -439,6 +440,15 @@ openlineage-integration-common==1.3.1
 openlineage-python==1.3.1
 openlineage_sql==1.3.1
 openpyxl==3.1.2
+opentelemetry-api==1.20.0
+opentelemetry-exporter-otlp-proto-common==1.20.0
+opentelemetry-exporter-otlp-proto-grpc==1.20.0
+opentelemetry-exporter-otlp-proto-http==1.20.0
+opentelemetry-exporter-otlp==1.20.0
+opentelemetry-exporter-prometheus==1.12.0rc1
+opentelemetry-proto==1.20.0
+opentelemetry-sdk==1.20.0
+opentelemetry-semantic-conventions==0.41b0
 opsgenie-sdk==2.1.5
 oracledb==1.4.1
 ordered-set==4.1.0
@@ -453,6 +463,7 @@ paramiko==3.3.1
 parso==0.8.3
 partd==1.4.1
 pathable==0.4.3
+pathspec==0.11.2
 pbr==5.11.1
 pdpyras==5.1.2
 pendulum==2.1.2
@@ -532,7 +543,7 @@ pyzmq==25.1.1
 reactivex==4.0.4
 readme-renderer==42.0
 redis==4.6.0
-redshift-connector==2.0.915
+redshift-connector==2.0.913
 referencing==0.30.2
 regex==2023.10.3
 requests-file==1.5.1
