@@ -286,7 +286,7 @@ docstring_parser==0.16
 docutils==0.16
 duckdb==1.0.0
 elastic-transport==8.13.1
-elasticsearch==8.13.2
+#elasticsearch==8.13.2
 email_validator==2.1.1
 entrypoints==0.4
 eralchemy2==1.4.1
@@ -616,7 +616,7 @@ rich==13.7.1
 rpds-py==0.18.1
 rsa==4.9
 ruff==0.3.3
-s3fs==2023.12.2
+#s3fs==2023.12.2
 s3transfer==0.10.1
 sarif-om==1.0.4
 scramp==1.4.5
