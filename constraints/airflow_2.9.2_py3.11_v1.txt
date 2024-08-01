@@ -302,7 +302,7 @@ fastjsonschema==2.19.1
 filelock==3.14.0
 flower==2.0.1
 frozenlist==1.4.1
-fsspec==2023.12.2
+#fsspec==2023.12.2
 future==1.0.0
 gcloud-aio-auth==4.2.3
 gcloud-aio-bigquery==7.1.0
