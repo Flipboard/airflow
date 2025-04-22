@@ -16,19 +16,25 @@
 # under the License.
 from __future__ import annotations
 
+import random
+import string
+from pathlib import Path
+
 import pytest
 
 from airflow_breeze.prepare_providers.provider_documentation import (
+    VERSION_MAJOR_INDEX,
+    VERSION_MINOR_INDEX,
+    VERSION_PATCHLEVEL_INDEX,
     Change,
+    TypeOfChange,
     _convert_git_changes_to_table,
     _find_insertion_index_for_version,
     _get_change_from_line,
     _get_changes_classified,
     _get_git_log_command,
-    _verify_changelog_exists,
     get_version_tag,
 )
-from airflow_breeze.utils.path_utils import AIRFLOW_SOURCES_ROOT
 
 CHANGELOG_CONTENT = """
 Changelog
@@ -93,28 +99,47 @@ def test_get_version_tag(version: str, provider_id: str, suffix: str, tag: str):
 
 
 @pytest.mark.parametrize(
-    "from_commit, to_commit, git_command",
+    "folder_paths, from_commit, to_commit, git_command",
     [
-        (None, None, ["git", "log", "--pretty=format:%H %h %cd %s", "--date=short", "--", "."]),
+        (None, None, None, ["git", "log", "--pretty=format:%H %h %cd %s", "--date=short", "--", "."]),
         (
+            None,
             "from_tag",
             None,
             ["git", "log", "--pretty=format:%H %h %cd %s", "--date=short", "from_tag", "--", "."],
         ),
         (
+            None,
             "from_tag",
             "to_tag",
             ["git", "log", "--pretty=format:%H %h %cd %s", "--date=short", "from_tag...to_tag", "--", "."],
         ),
+        (
+            [Path("a"), Path("b")],
+            "from_tag",
+            "to_tag",
+            [
+                "git",
+                "log",
+                "--pretty=format:%H %h %cd %s",
+                "--date=short",
+                "from_tag...to_tag",
+                "--",
+                "a",
+                "b",
+            ],
+        ),
     ],
 )
-def test_get_git_log_command(from_commit: str | None, to_commit: str | None, git_command: list[str]):
-    assert _get_git_log_command(from_commit, to_commit) == git_command
+def test_get_git_log_command(
+    folder_paths: list[str] | None, from_commit: str | None, to_commit: str | None, git_command: list[str]
+):
+    assert _get_git_log_command(folder_paths, from_commit, to_commit) == git_command
 
 
 def test_get_git_log_command_wrong():
     with pytest.raises(ValueError, match=r"to_commit without from_commit"):
-        _get_git_log_command(None, "to_commit")
+        _get_git_log_command(None, None, "to_commit")
 
 
 @pytest.mark.parametrize(
@@ -169,13 +194,13 @@ LONG_HASH_123144 SHORT_HASH 2023-01-01 Description `with` pr (#12346)
 
 Latest change: 2023-01-01
 
-============================================  ===========  ==================================
-Commit                                        Committed    Subject
-============================================  ===========  ==================================
-`SHORT_HASH <https://url/LONG_HASH_123144>`_  2023-01-01   ``Description 'with' no pr``
-`SHORT_HASH <https://url/LONG_HASH_123144>`_  2023-01-01   ``Description 'with' pr (#12345)``
-`SHORT_HASH <https://url/LONG_HASH_123144>`_  2023-01-01   ``Description 'with' pr (#12346)``
-============================================  ===========  ==================================""",
+=============================================  ===========  ==================================
+Commit                                         Committed    Subject
+=============================================  ===========  ==================================
+`SHORT_HASH <https://url/LONG_HASH_123144>`__  2023-01-01   ``Description 'with' no pr``
+`SHORT_HASH <https://url/LONG_HASH_123144>`__  2023-01-01   ``Description 'with' pr (#12345)``
+`SHORT_HASH <https://url/LONG_HASH_123144>`__  2023-01-01   ``Description 'with' pr (#12346)``
+=============================================  ===========  ==================================""",
             False,
             3,
         ),
@@ -210,23 +235,38 @@ def test_convert_git_changes_to_table(input: str, output: str, markdown: bool, c
     assert list_of_changes[2].pr == "12346"
 
 
-def test_verify_changelog_exists():
-    assert (
-        _verify_changelog_exists("asana")
-        == AIRFLOW_SOURCES_ROOT / "airflow" / "providers" / "asana" / "CHANGELOG.rst"
-    )
+def generate_random_string(length):
+    c = string.hexdigits.lower()
+    return "".join(random.choice(c) for _ in range(length))
+
+
+def generate_long_hash():
+    return generate_random_string(40)
+
+
+def generate_short_hash():
+    return generate_random_string(10)
 
 
 @pytest.mark.parametrize(
     "descriptions, with_breaking_changes, maybe_with_new_features,"
-    "breaking_count, feature_count, bugfix_count, other_count",
+    "breaking_count, feature_count, bugfix_count, other_count, misc_count, type_of_change",
     [
-        (["Added feature x"], True, True, 0, 1, 0, 0),
-        (["Added feature x"], False, False, 0, 0, 0, 1),
-        (["Breaking change in"], True, True, 1, 0, 0, 0),
-        (["Breaking change in", "Added feature y"], True, True, 1, 1, 0, 0),
-        (["Fix change in", "Breaking feature y"], False, True, 0, 0, 1, 1),
-        (["Fix change in", "Breaking feature y"], False, True, 0, 0, 1, 1),
+        (["Added feature x"], True, True, 0, 1, 0, 0, 0, [TypeOfChange.FEATURE]),
+        (["Added feature x"], False, True, 0, 1, 0, 0, 0, [TypeOfChange.FEATURE]),
+        (["Breaking change in"], True, True, 1, 0, 0, 0, 0, [TypeOfChange.BREAKING_CHANGE]),
+        (["Misc change in"], False, False, 0, 0, 0, 0, 1, [TypeOfChange.MISC]),
+        (
+            ["Fix change in", "Breaking feature y"],
+            True,
+            False,
+            1,
+            0,
+            1,
+            0,
+            0,
+            [TypeOfChange.BUGFIX, TypeOfChange.BREAKING_CHANGE],
+        ),
     ],
 )
 def test_classify_changes_automatically(
@@ -237,12 +277,22 @@ def test_classify_changes_automatically(
     feature_count: int,
     bugfix_count: int,
     other_count: int,
+    misc_count: int,
+    type_of_change: TypeOfChange,
 ):
+    from airflow_breeze.prepare_providers.provider_documentation import SHORT_HASH_TO_TYPE_DICT
+
     """Test simple automated classification of the changes based on their single-line description."""
     changes = [
-        _get_change_from_line(f"LONG SHORT 2023-12-01 {description}", version="0.1.0")
+        _get_change_from_line(
+            f"{generate_long_hash()} {generate_short_hash()} 2023-12-01 {description}", version="0.1.0"
+        )
         for description in descriptions
     ]
+
+    for i in range(0, len(changes)):
+        SHORT_HASH_TO_TYPE_DICT[changes[i].short_hash] = type_of_change[i]
+
     classified_changes = _get_changes_classified(
         changes, with_breaking_changes=with_breaking_changes, maybe_with_new_features=maybe_with_new_features
     )
@@ -250,3 +300,20 @@ def test_classify_changes_automatically(
     assert len(classified_changes.features) == feature_count
     assert len(classified_changes.fixes) == bugfix_count
     assert len(classified_changes.other) == other_count
+    assert len(classified_changes.other) == other_count
+    assert len(classified_changes.misc) == misc_count
+
+
+@pytest.mark.parametrize(
+    "initial_version, bump_index, expected_version",
+    [
+        ("4.2.1", VERSION_MAJOR_INDEX, "5.0.0"),
+        ("3.5.9", VERSION_MINOR_INDEX, "3.6.0"),
+        ("2.0.0", VERSION_PATCHLEVEL_INDEX, "2.0.1"),
+    ],
+)
+def test_version_bump_for_provider_documentation(initial_version, bump_index, expected_version):
+    from airflow_breeze.prepare_providers.provider_documentation import Version, bump_version
+
+    result = bump_version(Version(initial_version), bump_index)
+    assert str(result) == expected_version

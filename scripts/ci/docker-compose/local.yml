@@ -19,12 +19,16 @@ services:
   airflow:
     stdin_open: true  # docker run -i
     tty: true  # docker run -t
+    environment:
+      - AIRFLOW__CORE__PLUGINS_FOLDER=/files/plugins
     # We need to mount files and directories individually because some files
     # such apache_airflow.egg-info should not be mounted from host
     # we only mount those files, so that it makes sense to edit while developing
     # or those that might be useful to see in the host as output of the
     # tests (such as logs)
     volumes:
+      - root-airflow-volume:/root/airflow/
+      - airflow-cache-volume:/root/.cache
       # START automatically generated volumes from VOLUMES_FOR_SELECTED_MOUNTS in docker_command_utils.py
       - type: bind
         source: ../../../.bash_aliases
@@ -48,26 +52,23 @@ services:
         source: ../../../.rat-excludes
         target: /opt/airflow/.rat-excludes
       - type: bind
-        source: ../../../BREEZE.rst
-        target: /opt/airflow/BREEZE.rst
-      - type: bind
         source: ../../../LICENSE
         target: /opt/airflow/LICENSE
-      - type: bind
-        source: ../../../MANIFEST.in
-        target: /opt/airflow/MANIFEST.in
-      - type: bind
-        source: ../../../NOTICE
-        target: /opt/airflow/NOTICE
       - type: bind
         source: ../../../RELEASE_NOTES.rst
         target: /opt/airflow/RELEASE_NOTES.rst
       - type: bind
-        source: ../../../airflow
-        target: /opt/airflow/airflow
+        source: ../../../airflow-core
+        target: /opt/airflow/airflow-core
+      - type: bind
+        source: ../../../airflow-ctl
+        target: /opt/airflow/airflow-ctl
       - type: bind
         source: ../../../constraints
         target: /opt/airflow/constraints
+      - type: bind
+        source: ../../../clients
+        target: /opt/airflow/clients
       - type: bind
         source: ../../../dags
         target: /opt/airflow/dags
@@ -78,17 +79,23 @@ services:
         source: ../../../docs
         target: /opt/airflow/docs
       - type: bind
+        source: ../../../docker-stack-docs
+        target: /opt/airflow/docker-stack-docs
+      - type: bind
+        source: ../../../providers-summary-docs
+        target: /opt/airflow/providers-summary-docs
+      - type: bind
         source: ../../../generated
         target: /opt/airflow/generated
       - type: bind
-        source: ../../../hooks
-        target: /opt/airflow/hooks
-      - type: bind
-        source: ../../../images
-        target: /opt/airflow/images
-      - type: bind
         source: ../../../logs
         target: /root/airflow/logs
+      - type: bind
+        source: ../../../providers
+        target: /opt/airflow/providers
+      - type: bind
+        source: ../../../task-sdk
+        target: /opt/airflow/task-sdk
       - type: bind
         source: ../../../pyproject.toml
         target: /opt/airflow/pyproject.toml
@@ -99,24 +106,21 @@ services:
         source: ../../../scripts/docker/entrypoint_ci.sh
         target: /entrypoint
       - type: bind
-        source: ../../../setup.cfg
-        target: /opt/airflow/setup.cfg
+        source: ../../../devel-common
+        target: /opt/airflow/devel-common
       - type: bind
-        source: ../../../setup.py
-        target: /opt/airflow/setup.py
+        source: ../../../helm-tests
+        target: /opt/airflow/helm-tests
       - type: bind
-        source: ../../../tests
-        target: /opt/airflow/tests
+        source: ../../../kubernetes-tests
+        target: /opt/airflow/kubernetes-tests
       - type: bind
-        source: ../../../helm_tests
-        target: /opt/airflow/helm_tests
-      - type: bind
-        source: ../../../kubernetes_tests
-        target: /opt/airflow/kubernetes_tests
-      - type: bind
-        source: ../../../docker_tests
-        target: /opt/airflow/docker_tests
+        source: ../../../docker-tests
+        target: /opt/airflow/docker-tests
       - type: bind
         source: ../../../chart
         target: /opt/airflow/chart
         # END automatically generated volumes from VOLUMES_FOR_SELECTED_MOUNTS in docker_command_utils.py
+volumes:
+  root-airflow-volume:
+  airflow-cache-volume:

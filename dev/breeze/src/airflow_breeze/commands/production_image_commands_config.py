@@ -22,6 +22,8 @@ PRODUCTION_IMAGE_TOOLS_COMMANDS: dict[str, str | list[str]] = {
         "build",
         "pull",
         "verify",
+        "save",
+        "load",
     ],
 }
 PRODUCTION_IMAGE_TOOLS_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
@@ -29,13 +31,12 @@ PRODUCTION_IMAGE_TOOLS_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] =
         {
             "name": "Basic usage",
             "options": [
-                "--python",
-                "--install-airflow-version",
-                "--image-tag",
-                "--tag-as-latest",
-                "--docker-cache",
-                "--version-suffix-for-pypi",
                 "--build-progress",
+                "--docker-cache",
+                "--docker-host",
+                "--install-airflow-version",
+                "--python",
+                "--version-suffix-for-pypi",
             ],
         },
         {
@@ -52,11 +53,12 @@ PRODUCTION_IMAGE_TOOLS_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] =
         {
             "name": "Advanced build options (for power users)",
             "options": [
+                "--additional-pip-install-flags",
+                "--commit-sha",
                 "--debian-version",
                 "--python-image",
-                "--commit-sha",
-                "--additional-pip-install-flags",
-                "--install-providers-from-sources",
+                "--use-uv",
+                "--uv-http-timeout",
             ],
         },
         {
@@ -90,9 +92,10 @@ PRODUCTION_IMAGE_TOOLS_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] =
             "options": [
                 "--installation-method",
                 "--install-airflow-reference",
-                "--install-packages-from-context",
+                "--install-distributions-from-context",
+                "--install-mysql-client-type",
                 "--cleanup-context",
-                "--use-constraints-for-context-packages",
+                "--use-constraints-for-context-distributions",
                 "--disable-airflow-repo-cache",
                 "--disable-mysql-client-installation",
                 "--disable-mssql-client-installation",
@@ -120,11 +123,9 @@ PRODUCTION_IMAGE_TOOLS_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] =
         {
             "name": "Pull image flags",
             "options": [
-                "--image-tag",
                 "--python",
                 "--verify",
                 "--wait-for-image",
-                "--tag-as-latest",
             ],
         },
         {
@@ -153,7 +154,6 @@ PRODUCTION_IMAGE_TOOLS_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] =
                 "--image-name",
                 "--python",
                 "--slim-image",
-                "--image-tag",
                 "--pull",
             ],
         },
@@ -173,6 +173,34 @@ PRODUCTION_IMAGE_TOOLS_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] =
             "options": [
                 "--github-repository",
                 "--github-token",
+            ],
+        },
+    ],
+    "breeze prod-image save": [
+        {
+            "name": "Save image flags",
+            "options": [
+                "--python",
+                "--platform",
+                "--github-repository",
+                "--image-file",
+                "--image-file-dir",
+            ],
+        },
+    ],
+    "breeze prod-image load": [
+        {
+            "name": "Load image flags",
+            "options": [
+                "--python",
+                "--platform",
+                "--image-file",
+                "--image-file-dir",
+                "--github-repository",
+                "--github-token",
+                "--from-run",
+                "--from-pr",
+                "--skip-image-file-deletion",
             ],
         },
     ],

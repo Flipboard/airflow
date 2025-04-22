@@ -16,16 +16,16 @@
 # specific language governing permissions and limitations
 # under the License.
 # shellcheck shell=bash
+# shellcheck source=scripts/docker/common.sh
+. "$( dirname "${BASH_SOURCE[0]}" )/common.sh"
+
 set -euo pipefail
 
-: "${AIRFLOW_PIP_VERSION:?Should be set}"
+common::get_colors
+declare -a packages
 
 : "${INSTALL_MSSQL_CLIENT:?Should be true or false}"
 
-COLOR_BLUE=$'\e[34m'
-readonly COLOR_BLUE
-COLOR_RESET=$'\e[0m'
-readonly COLOR_RESET
 
 function install_mssql_client() {
     # Install MsSQL client from Microsoft repositories
@@ -35,24 +35,24 @@ function install_mssql_client() {
         echo
         return
     fi
+    packages=("msodbcsql18")
+
+    common::import_trusted_gpg "EB3E94ADBE1229CF" "microsoft"
+
     echo
     echo "${COLOR_BLUE}Installing mssql client${COLOR_RESET}"
     echo
-    local distro
-    local version
-    distro=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
-    version=$(lsb_release -rs)
-    local driver=msodbcsql18
-    curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
-    curl --silent https://packages.microsoft.com/keys/microsoft.asc | apt-key add - >/dev/null 2>&1
-    curl --silent "https://packages.microsoft.com/config/${distro}/${version}/prod.list" > \
-        /etc/apt/sources.list.d/mssql-release.list
-    apt-get update -yqq
-    apt-get upgrade -yqq
-    ACCEPT_EULA=Y apt-get -yqq install -y --no-install-recommends "${driver}"
+
+    echo "deb [arch=amd64,arm64] https://packages.microsoft.com/debian/$(lsb_release -rs)/prod $(lsb_release -cs) main" > \
+        /etc/apt/sources.list.d/mssql-release.list &&
+    mkdir -p /opt/microsoft/msodbcsql18 &&
+    touch /opt/microsoft/msodbcsql18/ACCEPT_EULA &&
+    apt-get update -yqq &&
+    apt-get upgrade -yqq &&
+    apt-get -yqq install --no-install-recommends "${packages[@]}" &&
+    apt-get autoremove -yqq --purge &&
+    apt-get clean &&
     rm -rf /var/lib/apt/lists/*
-    apt-get autoremove -yqq --purge
-    apt-get clean && rm -rf /var/lib/apt/lists/*
 }
 
 install_mssql_client "${@}"

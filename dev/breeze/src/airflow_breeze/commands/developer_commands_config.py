@@ -25,8 +25,10 @@ DEVELOPER_COMMANDS: dict[str, str | list[str]] = {
         "down",
         "shell",
         "exec",
-        "compile-www-assets",
+        "compile-ui-assets",
         "cleanup",
+        "generate-migration-file",
+        "doctor",
     ],
 }
 DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
@@ -37,7 +39,6 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
                 "--python",
                 "--integration",
                 "--standalone-dag-processor",
-                "--database-isolation",
             ],
         },
         {
@@ -45,6 +46,7 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
             "options": [
                 "--project-name",
                 "--restart",
+                "--docker-host",
             ],
         },
         {
@@ -53,7 +55,6 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
                 "--backend",
                 "--postgres-version",
                 "--mysql-version",
-                "--mssql-version",
                 "--db-reset",
             ],
         },
@@ -62,6 +63,8 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
             "options": [
                 "--github-repository",
                 "--builder",
+                "--use-uv",
+                "--uv-http-timeout",
             ],
         },
         {
@@ -78,8 +81,10 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
             "options": [
                 "--python",
                 "--integration",
+                "--load-example-dags",
+                "--load-default-connections",
                 "--standalone-dag-processor",
-                "--database-isolation",
+                "--start-api-server-with-examples",
             ],
         },
         {
@@ -87,6 +92,7 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
             "options": [
                 "--project-name",
                 "--restart",
+                "--docker-host",
             ],
         },
         {
@@ -105,7 +111,6 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
                 "--backend",
                 "--postgres-version",
                 "--mysql-version",
-                "--mssql-version",
                 "--db-reset",
             ],
         },
@@ -122,9 +127,10 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
             "options": [
                 "--force-build",
                 "--platform",
-                "--image-tag",
                 "--github-repository",
                 "--builder",
+                "--use-uv",
+                "--uv-http-timeout",
             ],
         },
         {
@@ -137,19 +143,31 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
         {
             "name": "Installing packages after entering shell",
             "options": [
-                "--install-selected-providers",
-                "--use-airflow-version",
+                "--airflow-constraints-location",
+                "--airflow-constraints-mode",
                 "--airflow-constraints-reference",
                 "--airflow-extras",
-                "--use-packages-from-dist",
-                "--package-format",
+                "--airflow-skip-constraints",
+                "--clean-airflow-installation",
+                "--excluded-providers",
+                "--install-airflow-with-constraints",
+                "--install-selected-providers",
+                "--distribution-format",
+                "--providers-constraints-location",
+                "--providers-constraints-mode",
+                "--providers-constraints-reference",
+                "--providers-skip-constraints",
+                "--use-airflow-version",
+                "--use-distributions-from-dist",
+                "--install-airflow-python-client",
             ],
         },
         {
-            "name": "Upgrading/downgrading selected packages",
+            "name": "Upgrading/downgrading/removing selected packages",
             "options": [
                 "--upgrade-boto",
                 "--downgrade-sqlalchemy",
+                "--downgrade-pendulum",
             ],
         },
         {
@@ -165,12 +183,14 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
                 "--forward-credentials",
                 "--max-time",
                 "--verbose-commands",
+                "--keep-env-variables",
+                "--no-db-cleanup",
             ],
         },
     ],
-    "breeze compile-www-assets": [
+    "breeze compile-ui-assets": [
         {
-            "name": "Compile www assets flag",
+            "name": "Compile ui assets flag",
             "options": [
                 "--dev",
                 "--force-clean",
@@ -185,7 +205,6 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
                 "--platform",
                 "--integration",
                 "--standalone-dag-processor",
-                "--database-isolation",
                 "--load-example-dags",
                 "--load-default-connections",
             ],
@@ -195,6 +214,7 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
             "options": [
                 "--project-name",
                 "--restart",
+                "--docker-host",
             ],
         },
         {
@@ -203,7 +223,6 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
                 "--backend",
                 "--postgres-version",
                 "--mysql-version",
-                "--mssql-version",
                 "--db-reset",
             ],
         },
@@ -216,9 +235,15 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
             ],
         },
         {
+            "name": "Auth manager",
+            "options": [
+                "--auth-manager",
+            ],
+        },
+        {
             "name": "Asset compilation options",
             "options": [
-                "--skip-asset-compilation",
+                "--skip-assets-compilation",
                 "--dev-mode",
             ],
         },
@@ -226,9 +251,10 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
             "name": "Build CI image (before entering shell)",
             "options": [
                 "--force-build",
-                "--image-tag",
                 "--github-repository",
                 "--builder",
+                "--use-uv",
+                "--uv-http-timeout",
             ],
         },
         {
@@ -240,11 +266,20 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
         {
             "name": "Installing packages after entering shell",
             "options": [
-                "--use-airflow-version",
+                "--airflow-constraints-location",
+                "--airflow-constraints-mode",
                 "--airflow-constraints-reference",
                 "--airflow-extras",
-                "--use-packages-from-dist",
-                "--package-format",
+                "--airflow-skip-constraints",
+                "--clean-airflow-installation",
+                "--install-selected-providers",
+                "--distribution-format",
+                "--providers-constraints-location",
+                "--providers-constraints-mode",
+                "--providers-constraints-reference",
+                "--providers-skip-constraints",
+                "--use-airflow-version",
+                "--use-distributions-from-dist",
             ],
         },
         {
@@ -263,7 +298,7 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
             "options": [
                 "--preserve-volumes",
                 "--cleanup-mypy-cache",
-                "--project-name",
+                "--cleanup-build-cache",
             ],
         },
     ],
@@ -276,8 +311,11 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
                 "--clean-build",
                 "--one-pass-only",
                 "--package-filter",
+                "--include-not-ready-providers",
+                "--include-removed-providers",
                 "--github-repository",
                 "--builder",
+                "--distributions-list",
             ],
         },
     ],
@@ -306,7 +344,6 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
             "options": [
                 "--skip-image-upgrade-check",
                 "--force-build",
-                "--image-tag",
                 "--github-repository",
                 "--builder",
             ],
@@ -319,5 +356,23 @@ DEVELOPER_PARAMETERS: dict[str, list[dict[str, str | list[str]]]] = {
                 "--all",
             ],
         },
+    ],
+    "breeze generate-migration-file": [
+        {
+            "name": "generate-migration-file flags",
+            "options": [
+                "--message",
+                "--github-repository",
+                "--builder",
+            ],
+        },
+    ],
+    "breeze doctor": [
+        {
+            "name": "Auto-healing of breeze",
+            "options": [
+                "--answer",
+            ],
+        }
     ],
 }

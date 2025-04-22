@@ -22,13 +22,18 @@ readonly DOCKERHUB_USER
 DOCKERHUB_REPO=${DOCKERHUB_REPO:="airflow"}
 readonly DOCKERHUB_REPO
 
-PGBOUNCER_VERSION="1.16.1"
+# Sometimes the pgbouncer tag does not reliably correspond with the version name
+# For example, it may have a `-fixed` suffix
+PGBOUNCER_TAG="pgbouncer_1_23_1-fixed"
+readonly PGBOUNCER_TAG
+
+PGBOUNCER_VERSION="1.23.1"
 readonly PGBOUNCER_VERSION
 
-PGBOUNCER_SHA256="087477e9e4766d032b04b7b006c0c8d64160a54141a7bfc2c6e5ae7ae11bf7fc"
+PGBOUNCER_SHA256="1963b497231d9a560a62d266e4a2eae6881ab401853d93e5d292c3740eec5084"
 readonly PGBOUNCER_SHA256
 
-AIRFLOW_PGBOUNCER_VERSION="2023.02.24"
+AIRFLOW_PGBOUNCER_VERSION="2025.03.05"
 readonly AIRFLOW_PGBOUNCER_VERSION
 
 COMMIT_SHA=$(git rev-parse HEAD)
@@ -58,6 +63,7 @@ docker buildx build . \
     --platform linux/amd64,linux/arm64 \
     --pull \
     --push \
+    --build-arg "PGBOUNCER_TAG=${PGBOUNCER_TAG}" \
     --build-arg "PGBOUNCER_VERSION=${PGBOUNCER_VERSION}" \
     --build-arg "AIRFLOW_PGBOUNCER_VERSION=${AIRFLOW_PGBOUNCER_VERSION}"\
     --build-arg "PGBOUNCER_SHA256=${PGBOUNCER_SHA256}"\

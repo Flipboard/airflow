@@ -24,16 +24,15 @@ import rich_click as click
 from rich import print
 
 PROVIDERS_DOCKER = """\
-FROM ghcr.io/apache/airflow/main/ci/python3.10
-RUN rm -rf /opt/airflow/airflow/providers
-
+FROM ghcr.io/apache/airflow/main/ci/python3.9
+RUN cd airflow-core; uv sync --no-sources
 
 # Install providers
 {}
 """
 
 AIRFLOW_DOCKER = """\
-FROM python:3.8
+FROM python:3.9
 
 # Upgrade
 RUN pip install "apache-airflow=={}"
@@ -96,7 +95,7 @@ def check_providers(files: list[str]):
         version = strip_rc_suffix(version)
         expected_files = expand_name_variations(
             [
-                f"{name}-{version}.tar.gz",
+                f"{name.replace('-', '_')}-{version}.tar.gz",
                 f"{name.replace('-', '_')}-{version}-py3-none-any.whl",
             ]
         )
@@ -131,9 +130,11 @@ def check_release(files: list[str], version: str):
 
     expected_files = expand_name_variations(
         [
-            f"apache-airflow-{version}.tar.gz",
+            f"apache_airflow-{version}.tar.gz",
             f"apache-airflow-{version}-source.tar.gz",
             f"apache_airflow-{version}-py3-none-any.whl",
+            f"apache_airflow_core-{version}.tar.gz",
+            f"apache_airflow_core-{version}-py3-none-any.whl",
         ]
     )
     return check_all_files(expected_files=expected_files, actual_files=files)
@@ -204,7 +205,9 @@ def providers(ctx, path: str):
     files = os.listdir(os.path.join(path, "providers"))
     pips = [f"{name}=={version}" for name, version in get_packages()]
     missing_files = check_providers(files)
-    create_docker(PROVIDERS_DOCKER.format("\n".join(f"RUN pip install '{p}'" for p in pips)))
+    create_docker(
+        PROVIDERS_DOCKER.format("RUN uv pip install --pre --system " + " ".join(f"'{p}'" for p in pips))
+    )
     if missing_files:
         warn_of_missing_files(missing_files)
 
@@ -247,31 +250,86 @@ if __name__ == "__main__":
 def test_check_release_pass():
     """Passes if all present"""
     files = [
-        "apache_airflow-2.2.1-py3-none-any.whl",
-        "apache_airflow-2.2.1-py3-none-any.whl.asc",
-        "apache_airflow-2.2.1-py3-none-any.whl.sha512",
-        "apache-airflow-2.2.1-source.tar.gz",
-        "apache-airflow-2.2.1-source.tar.gz.asc",
-        "apache-airflow-2.2.1-source.tar.gz.sha512",
-        "apache-airflow-2.2.1.tar.gz",
-        "apache-airflow-2.2.1.tar.gz.asc",
-        "apache-airflow-2.2.1.tar.gz.sha512",
+        "apache_airflow-2.8.1-py3-none-any.whl",
+        "apache_airflow-2.8.1-py3-none-any.whl.asc",
+        "apache_airflow-2.8.1-py3-none-any.whl.sha512",
+        "apache-airflow-2.8.1-source.tar.gz",
+        "apache-airflow-2.8.1-source.tar.gz.asc",
+        "apache-airflow-2.8.1-source.tar.gz.sha512",
+        "apache_airflow-2.8.1.tar.gz",
+        "apache_airflow-2.8.1.tar.gz.asc",
+        "apache_airflow-2.8.1.tar.gz.sha512",
+        "apache_airflow_core-2.8.1-py3-none-any.whl",
+        "apache_airflow_core-2.8.1-py3-none-any.whl.asc",
+        "apache_airflow_core-2.8.1-py3-none-any.whl.sha512",
+        "apache_airflow_core-2.8.1.tar.gz",
+        "apache_airflow_core-2.8.1.tar.gz.asc",
+        "apache_airflow_core-2.8.1.tar.gz.sha512",
     ]
-    assert check_release(files, version="2.2.1rc2") == []
+    assert check_release(files, version="2.8.1rc2") == []
 
 
 def test_check_release_fail():
     """Fails if missing one"""
     files = [
-        "apache_airflow-2.2.1-py3-none-any.whl",
-        "apache_airflow-2.2.1-py3-none-any.whl.asc",
-        "apache_airflow-2.2.1-py3-none-any.whl.sha512",
-        "apache-airflow-2.2.1-source.tar.gz",
-        "apache-airflow-2.2.1-source.tar.gz.asc",
-        "apache-airflow-2.2.1-source.tar.gz.sha512",
-        "apache-airflow-2.2.1.tar.gz.asc",
-        "apache-airflow-2.2.1.tar.gz.sha512",
+        "apache_airflow-2.8.1-py3-none-any.whl",
+        "apache_airflow-2.8.1-py3-none-any.whl.asc",
+        "apache_airflow-2.8.1-py3-none-any.whl.sha512",
+        "apache-airflow-2.8.1-source.tar.gz",
+        "apache-airflow-2.8.1-source.tar.gz.asc",
+        "apache-airflow-2.8.1-source.tar.gz.sha512",
+        "apache_airflow-2.8.1.tar.gz.asc",
+        "apache_airflow-2.8.1.tar.gz.sha512",
+        "apache_airflow_core-2.8.1-py3-none-any.whl",
+        "apache_airflow_core-2.8.1-py3-none-any.whl.asc",
+        "apache_airflow_core-2.8.1-py3-none-any.whl.sha512",
+        "apache_airflow_core-2.8.1.tar.gz.asc",
+        "apache_airflow_core-2.8.1.tar.gz.sha512",
     ]
 
-    missing_files = check_release(files, version="2.2.1rc2")
-    assert missing_files == ["apache-airflow-2.2.1.tar.gz"]
+    missing_files = check_release(files, version="2.8.1rc2")
+    assert missing_files == ["apache_airflow-2.8.1.tar.gz", "apache_airflow_core-2.8.1.tar.gz"]
+
+
+def test_check_providers_pass(monkeypatch, tmp_path):
+    """Passes if all present"""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "packages.txt").write_text(
+        "https://pypi.org/project/apache-airflow-providers-airbyte/3.1.0rc1/\n"
+        "https://pypi.org/project/apache-airflow-providers-foo-bar/9.6.42rc2/\n"
+    )
+
+    files = [
+        "apache_airflow_providers_airbyte-3.1.0.tar.gz",
+        "apache_airflow_providers_airbyte-3.1.0.tar.gz.asc",
+        "apache_airflow_providers_airbyte-3.1.0.tar.gz.sha512",
+        "apache_airflow_providers_airbyte-3.1.0-py3-none-any.whl",
+        "apache_airflow_providers_airbyte-3.1.0-py3-none-any.whl.asc",
+        "apache_airflow_providers_airbyte-3.1.0-py3-none-any.whl.sha512",
+        "apache_airflow_providers_foo_bar-9.6.42.tar.gz",
+        "apache_airflow_providers_foo_bar-9.6.42.tar.gz.asc",
+        "apache_airflow_providers_foo_bar-9.6.42.tar.gz.sha512",
+        "apache_airflow_providers_foo_bar-9.6.42-py3-none-any.whl",
+        "apache_airflow_providers_foo_bar-9.6.42-py3-none-any.whl.asc",
+        "apache_airflow_providers_foo_bar-9.6.42-py3-none-any.whl.sha512",
+    ]
+    assert check_providers(files) == []
+
+
+def test_check_providers_failure(monkeypatch, tmp_path):
+    """Passes if all present"""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "packages.txt").write_text(
+        "https://pypi.org/project/apache-airflow-providers-spam-egg/1.2.3rc4/\n"
+    )
+
+    files = [
+        "apache_airflow_providers_spam_egg-1.2.3.tar.gz",
+        "apache_airflow_providers_spam_egg-1.2.3.tar.gz.sha512",
+        "apache_airflow_providers_spam_egg-1.2.3-py3-none-any.whl",
+        "apache_airflow_providers_spam_egg-1.2.3-py3-none-any.whl.asc",
+    ]
+    assert sorted(check_providers(files)) == [
+        "apache_airflow_providers_spam_egg-1.2.3-py3-none-any.whl.sha512",
+        "apache_airflow_providers_spam_egg-1.2.3.tar.gz.asc",
+    ]

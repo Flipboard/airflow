@@ -57,6 +57,10 @@ coverage:
           - v2-7-test
           - v2-8-stable
           - v2-8-test
+          - v2-9-stable
+          - v2-9-test
+          - v2-10-stable
+          - v2-10-test
         if_not_found: success
         if_ci_failed: error
         informational: true
@@ -86,6 +90,12 @@ coverage:
           - v2-6-test
           - v2-7-stable
           - v2-7-test
+          - v2-8-stable
+          - v2-8-test
+          - v2-9-stable
+          - v2-9-test
+          - v2-10-stable
+          - v2-10-test
         if_no_uploads: error
         if_not_found: success
         if_ci_failed: error
@@ -100,6 +110,7 @@ ignore:
   - "airflow/example_dags"
   - "airflow/migrations"
   - "airflow/providers/**/example_dags"
-  - "airflow/www/node_modules"
+  - "airflow/ui/node_modules"
+  - "airflow/api_fastapi/auth/managers/simple/ui/node_modules"
 
 comment: false

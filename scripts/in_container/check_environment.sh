@@ -28,50 +28,16 @@ EXIT_CODE=0
 # Even if this message might be harmless, it might hide the real reason for the problem
 # Which is the long time needed to start some services, seeing this message might be totally misleading
 # when you try to analyse the problem, that's why it's best to avoid it,
-function run_nc() {
-    local host=${1}
-    local port=${2}
-    local ip
-    ip=$(python -c "import socket; print(socket.gethostbyname('${host}'))")
 
-    nc -zvvn "${ip}" "${port}"
-}
+. "$( dirname "${BASH_SOURCE[0]}" )/check_connectivity.sh"
 
 function check_service {
     local label=$1
     local call=$2
     local max_check=${3:=1}
 
-    echo -n "${label}: "
-    while true
-    do
-        set +e
-        local last_check_result
-        last_check_result=$(eval "${call}" 2>&1)
-        local res=$?
-        set -e
-        if [[ ${res} == 0 ]]; then
-            echo  "${COLOR_GREEN}OK.  ${COLOR_RESET}"
-            break
-        else
-            echo -n "."
-            max_check=$((max_check-1))
-        fi
-        if [[ ${max_check} == 0 ]]; then
-            echo "${COLOR_RED}ERROR: Maximum number of retries while checking service. Exiting ${COLOR_RESET}"
-            break
-        else
-            sleep 1
-        fi
-    done
-    if [[ ${res} != 0 ]]; then
-        echo "Service could not be started!"
-        echo
-        echo "$ ${call}"
-        echo "${last_check_result}"
-        echo
-        EXIT_CODE=${res}
-    fi
+   check_service_connection "${label}" "${call}" "${max_check}"
+   EXIT_CODE=$?
 }
 
 function check_db_backend {
@@ -133,7 +99,12 @@ function startairflow_if_requested() {
             # set the removed AIRFLOW__DATABASE__LOAD_DEFAULT_CONNECTIONS
             AIRFLOW__DATABASE__LOAD_DEFAULT_CONNECTIONS=${LOAD_DEFAULT_CONNECTIONS} airflow db init
         fi
-        airflow users create -u admin -p admin -f Thor -l Adminstra -r Admin -e admin@email.domain
+
+        if airflow config get-value core auth_manager | grep -q "FabAuthManager"; then
+            airflow users create -u admin -p admin -f Thor -l Adminstra -r Admin -e admin@email.domain || true
+        else
+            echo "Skipping user creation as auth manager different from Fab is used"
+        fi
 
         . "$( dirname "${BASH_SOURCE[0]}" )/run_init_script.sh"
 
@@ -156,6 +127,9 @@ fi
 if [[ ${INTEGRATION_MONGO} == "true" ]]; then
     check_service "MongoDB" "run_nc mongo 27017" 50
 fi
+if [[ ${INTEGRATION_REDIS} == "true" ]]; then
+    check_service "Redis" "run_nc redis 6379" 50
+fi
 if [[ ${INTEGRATION_CELERY} == "true" ]]; then
     check_service "Redis" "run_nc redis 6379" 50
     check_service "RabbitMQ" "run_nc rabbitmq 5672" 50
@@ -177,8 +151,27 @@ if [[ ${INTEGRATION_PINOT} == "true" ]]; then
     CMD="curl --max-time 1 -X GET 'http://pinot:8000/health' -H 'accept: text/plain' | grep OK"
     check_service "Pinot (Broker API)" "${CMD}" 50
 fi
+
+if [[ ${INTEGRATION_QDRANT} == "true" ]]; then
+    check_service "Qdrant" "run_nc qdrant 6333" 50
+    CMD="curl -f -X GET 'http://qdrant:6333/collections'"
+    check_service "Qdrant (Collections API)" "${CMD}" 50
+fi
+
 if [[ ${INTEGRATION_KAFKA} == "true" ]]; then
     check_service "Kafka Cluster" "run_nc broker 9092" 50
+fi
+
+if [[ ${INTEGRATION_MSSQL} == "true" ]]; then
+    check_service "mssql" "run_nc mssql 1433" 50
+fi
+
+if [[ ${INTEGRATION_DRILL} == "true" ]]; then
+    check_service "drill" "run_nc drill 8047" 50
+fi
+
+if [[ ${INTEGRATION_YDB} == "true" ]]; then
+    check_service "YDB Cluster" "run_nc ydb 2136" 50
 fi
 
 if [[ ${EXIT_CODE} != 0 ]]; then

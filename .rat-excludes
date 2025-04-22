@@ -19,6 +19,7 @@
 .rat-excludes
 .stylelintignore
 .stylelintrc
+.venv
 requirements
 requirements.txt
 .*log
@@ -40,10 +41,13 @@ metastore_db
 logs
 .bash_aliases
 venv
-files
-airflow.iml
+clients/*
+files/*
+dags/*
+generated/*
 .gitmodules
-installed_providers.txt
+prod_image_installed_providers.txt
+airflow_pre_installed_providers.txt
 
 # Generated doc files
 .*html
@@ -61,7 +65,7 @@ spelling_wordlist.txt
 # it is compatible according to http://www.apache.org/legal/resolved.html#category-a
 kerberos_auth.py
 airflow_api_auth_backend_kerberos_auth_py.html
-licenses/*
+3rd-party-licenses/*
 parallel.js
 underscore.js
 jquery.dataTables.min.js
@@ -85,6 +89,7 @@ PULL_REQUEST_TEMPLATE.md
 PROVIDER_CHANGES*.md
 manifests/*
 redirects.txt
+reproducible_build.yaml
 
 # Locally mounted files
 .*egg-info/*
@@ -105,9 +110,6 @@ tmp
 # generated doc-only-changes.txt
 .latest-doc-only-change.txt
 
-# generated provider_packages
-provider_packages
-
 # Chart ignored files
 chart/.gitignore
 chart/values.schema.json
@@ -118,18 +120,24 @@ chart/Chart.yaml
 # Generated autocomplete files
 ./dev/breeze/autocomplete/*
 
+# Generated devel_deps files
+devel_deps.txt
+
 # Newsfragments are snippets that will be, eventually, consumed into RELEASE_NOTES
 newsfragments/*
 
 # Warning file generated
 warnings.txt
+warn-summary-*.txt
 
 # Dev stuff
 tests/*
 scripts/*
 images/*
 dev/*
-chart/*.iml
+.*\.iml
+out/*
+airflow-build-dockerfile*
 
 # Sha files
 .*sha256
@@ -145,3 +153,21 @@ doap_airflow.rdf
 
 # PKG-INFO file
 PKG-INFO
+
+# checksum files
+.*\.md5sum
+
+# Openapi files
+.openapi-generator-ignore
+version.txt
+v1*.yaml
+_private_ui*.yaml
+
+# Front end generated files
+api-generated.ts
+openapi-gen
+pnpm-lock.yaml
+
+# python generated file
+generated.py
+auth_generated.py

@@ -20,7 +20,7 @@
 ################################
 ## Airflow Worker KEDA Scaler
 #################################
-{{- if and .Values.workers.keda.enabled (has .Values.executor (list "CeleryExecutor" "CeleryKubernetesExecutor")) }}
+{{- if and .Values.workers.keda.enabled (or (contains "CeleryExecutor" .Values.executor) (contains "CeleryKubernetesExecutor" .Values.executor) ) }}
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
@@ -39,6 +39,7 @@ spec:
   scaleTargetRef:
     kind: {{ ternary "StatefulSet" "Deployment" .Values.workers.persistence.enabled }}
     name: {{ include "airflow.fullname" . }}-worker
+    envSourceContainerName: worker
   pollingInterval:  {{ .Values.workers.keda.pollingInterval }}
   cooldownPeriod: {{ .Values.workers.keda.cooldownPeriod }}
   minReplicaCount: {{ .Values.workers.keda.minReplicaCount }}
@@ -47,7 +48,14 @@ spec:
   advanced: {{- toYaml .Values.workers.keda.advanced | nindent 4 }}
   {{- end }}
   triggers:
-    - type: postgresql
+    {{- if eq .Values.data.metadataConnection.protocol "mysql" }}
+    - type: "mysql"
+      metadata:
+        queryValue: "1"
+        connectionStringFromEnv: KEDA_DB_CONN
+        query: {{ tpl .Values.workers.keda.query . | quote }}
+    {{- else }}
+    - type: "postgresql"
       metadata:
         targetQueryValue: "1"
         {{- if and .Values.pgbouncer.enabled (not .Values.workers.keda.usePgbouncer) }}
@@ -56,4 +64,5 @@ spec:
         connectionFromEnv: AIRFLOW_CONN_AIRFLOW_DB
         {{- end }}
         query: {{ tpl .Values.workers.keda.query . | quote }}
+    {{- end }}
 {{- end }}
