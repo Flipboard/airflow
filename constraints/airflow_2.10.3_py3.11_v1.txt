@@ -121,7 +121,7 @@ apache-airflow-providers-apprise==2.0.2
 apache-airflow-providers-arangodb==2.7.3
 apache-airflow-providers-asana==2.9.1
 apache-airflow-providers-atlassian-jira==3.0.2
-apache-airflow-providers-celery==3.10.5
+apache-airflow-providers-celery==3.10.4
 apache-airflow-providers-cloudant==4.1.1
 apache-airflow-providers-cncf-kubernetes==10.4.1
 apache-airflow-providers-cohere==1.4.3
@@ -295,8 +295,8 @@ docopt==0.6.2
 docstring_parser==0.16
 docutils==0.21.2
 duckdb==1.2.2
-elastic-transport==8.17.1
-elasticsearch==8.17.2
+elastic-transport==8.4.1
+elasticsearch==7.13.4
 email_validator==2.2.0
 entrypoints==0.4
 eralchemy2==1.4.1
@@ -752,7 +752,7 @@ tzlocal==5.3.1
 uc-micro-py==1.0.3
 universal_pathlib==0.2.6
 uritemplate==4.1.1
-urllib3==2.4.0
+urllib3<2.4.0
 userpath==1.9.2
 uv==0.6.14
 validators==0.34.0
