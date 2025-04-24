@@ -267,7 +267,7 @@ cloudant==2.15.0
 cloudpickle==2.2.1
 cohere==5.14.2
 colorama==0.4.6
-colorlog==6.9.0
+colorlog<=6.9.0
 comm==0.2.2
 confluent-kafka==2.9.0
 connexion==2.14.2
